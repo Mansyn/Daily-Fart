@@ -1,4 +1,4 @@
-package com.example.daily_fart;
+package com.unleashed.daily_fart;
 
 import android.os.Bundle;
 import io.flutter.app.FlutterActivity;
