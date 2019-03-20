@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "165656852154",
+    "firebase_url": "https://daily-fart.firebaseio.com",
+    "project_id": "daily-fart",
+    "storage_bucket": "daily-fart.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:165656852154:android:cd8348255fe9f4db",
+        "android_client_info": {
+          "package_name": "com.unleashed.daily_fart"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "165656852154-37tcqrvtdu8vavgsopd0uv3butrgi7ni.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCKjAE9yXl_No3n8g2DGfsskdi7Bxeq7Es"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
