@@ -1,10 +1,15 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:firebase_admob/firebase_admob.dart';
 import 'package:audioplayers/audio_cache.dart';
 
-void main() => runApp(MyApp());
+const String testing_device = 'emulator-5554';
+const String ad_unit_id = 'ca-app-pub-4892089932850014/7444446144';
+const String app_id = 'ca-app-pub-4892089932850014~3425310088';
 
 const fartAudioPath = "Silly_Farts-Joe.mp3";
+
+void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
@@ -42,24 +47,57 @@ class MyHomePage extends StatefulWidget {
   // always marked "final".
 
   final String title;
+  final AudioCache player = new AudioCache();
+  final AssetImage assetImage = new AssetImage("assets/Jakesalad.png");
+  final MobileAdTargetingInfo targetingInfo = MobileAdTargetingInfo(
+      testDevices: testing_device != null ? <String>[testing_device] : null,
+      keywords: <String>['daily', 'fart'],
+      childDirected: true);
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  static AudioCache player = new AudioCache();
+  BannerAd _bannerAd;
+  bool _adShown;
+
+  BannerAd createBannerAd() {
+    return new BannerAd(
+        adUnitId: ad_unit_id,
+        targetingInfo: widget.targetingInfo,
+        size: AdSize.banner,
+        listener: (MobileAdEvent event) {
+          if (event == MobileAdEvent.loaded) {
+            _adShown = true;
+            setState(() {});
+          } else if (event == MobileAdEvent.failedToLoad) {
+            _adShown = false;
+            setState(() {});
+          }
+        });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _adShown = false;
+    FirebaseAdMob.instance.initialize(appId: app_id);
+    _bannerAd = createBannerAd()..load();
+  }
 
   @override
   Widget build(BuildContext context) {
-    var assetImage = new AssetImage("assets/Jakesalad.png");
-    var image = new Image(image: assetImage, height: 250.0, width: 300.0);
-
     void _onClicked() {
       setState(() {
-        player.play(fartAudioPath);
+        widget.player.play(fartAudioPath);
       });
     }
+
+    List<Widget> fakeBottomButtons = new List<Widget>();
+    fakeBottomButtons.add(new Container(
+      height: 50.0,
+    ));
 
     return Scaffold(
       appBar: AppBar(
@@ -79,12 +117,20 @@ class _MyHomePageState extends State<MyHomePage> {
                 height: 250.0,
                 width: 300.0,
                 child: new IconButton(
-                  icon: image,
+                  icon: new Image(
+                      image: widget.assetImage, height: 250.0, width: 300.0),
                   onPressed: _onClicked,
                 ))
           ],
         ),
       ),
+      persistentFooterButtons: _adShown ? fakeBottomButtons : null,
     );
+  }
+
+  @override
+  void dispose() {
+    _bannerAd?.dispose();
+    super.dispose();
   }
 }
