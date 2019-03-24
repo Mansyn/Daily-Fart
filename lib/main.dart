@@ -8,8 +8,6 @@ const String testing_device = 'emulator-5554';
 const String ad_unit_id = 'ca-app-pub-4892089932850014/7444446144';
 const String app_id = 'ca-app-pub-4892089932850014~3425310088';
 
-const fartAudioPath = "Silly_Farts-Joe.mp3";
-
 enum PlayerState { stopped, playing, paused }
 
 void main() => runApp(MyApp());
@@ -33,7 +31,6 @@ class MyHomePage extends StatefulWidget {
 
   final String notPlaying = "assets/headshark.jpg";
   final String playing = "assets/headshark.gif";
-  String currentImage = "assets/headshark.jpg";
 
   final MobileAdTargetingInfo targetingInfo = MobileAdTargetingInfo(
       testDevices: testing_device != null ? <String>[testing_device] : null,
@@ -51,6 +48,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
   PlayerState _playerState = PlayerState.stopped;
   StreamSubscription _playerCompleteSubscription;
+
+  String currentImage = "assets/headshark.jpg";
 
   get _isPlaying => _playerState == PlayerState.playing;
 
@@ -110,7 +109,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 width: 400.0,
                 child: new IconButton(
                   icon: new Image(
-                      image: new AssetImage(widget.currentImage),
+                      image: new AssetImage(currentImage),
                       height: 225.0,
                       width: 400.0),
                   onPressed: _isPlaying ? null : () => _play(),
@@ -138,7 +137,7 @@ class _MyHomePageState extends State<MyHomePage> {
     if (result == 1)
       setState(() {
         _playerState = PlayerState.playing;
-        widget.currentImage = widget.playing;
+        currentImage = widget.playing;
       });
     return result;
   }
@@ -146,7 +145,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void _onComplete() {
     setState(() {
       _playerState = PlayerState.stopped;
-      widget.currentImage = widget.notPlaying;
+      currentImage = widget.notPlaying;
     });
   }
 
