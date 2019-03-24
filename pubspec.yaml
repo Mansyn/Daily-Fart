@@ -48,7 +48,8 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/butt-icon.png
+    - assets/headshark.jpg
+    - assets/headshark.gif
     - assets/Silly_Farts-Joe.mp3
 
   # An image asset can refer to one or more resolution-specific "variants", see
