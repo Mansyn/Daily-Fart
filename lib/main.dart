@@ -3,10 +3,14 @@ import 'dart:io';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_admob/firebase_admob.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 const String testing_device = 'emulator-5554';
 const String ad_unit_id = 'ca-app-pub-4892089932850014/7444446144';
 const String app_id = 'ca-app-pub-4892089932850014~3425310088';
+
+const String storagePath =
+    'https://firebasestorage.googleapis.com/v0/b/daily-fart.appspot.com/o/fart{0}.mp3';
 
 enum PlayerState { stopped, playing, paused }
 
@@ -41,17 +45,36 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  BannerAd _bannerAd;
+  BannerAd _bannerAd; // ad
   bool _adShown;
 
-  AudioPlayer _audioPlayer;
-
+  AudioPlayer _audioPlayer; // audio player
   PlayerState _playerState = PlayerState.stopped;
   StreamSubscription _playerCompleteSubscription;
-
-  String currentImage = "assets/headshark.jpg";
-
   get _isPlaying => _playerState == PlayerState.playing;
+
+  String currentImage = "assets/headshark.jpg"; // files
+  File _cachedFile;
+
+  Future<Null> downloadSound() async {
+    final TimeOfDay now = TimeOfDay.now();
+    final int hour = now.hour;
+    final String path = storagePath.replaceAll('{0}', hour.toString());
+
+    final RegExp regExp = RegExp('([^?/]*\.(mp3))');
+    final String fileName = regExp.stringMatch(path);
+    final Directory tempDir = Directory.systemTemp;
+    final File file = File('${tempDir.path}/$fileName');
+
+    final StorageReference ref = FirebaseStorage.instance.ref().child(fileName);
+    final StorageFileDownloadTask downloadTask = ref.writeToFile(file);
+
+    final int byteNumber = (await downloadTask.future).totalByteCount;
+
+    print(byteNumber);
+
+    setState(() => _cachedFile = file);
+  }
 
   BannerAd createBannerAd() {
     return new BannerAd(
@@ -72,6 +95,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
+    downloadSound();
 
     FirebaseAdMob.instance.initialize(appId: app_id);
     _adShown = false;
@@ -131,9 +155,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<int> _play() async {
-    final result = await _audioPlayer.play(
-        'https://firebasestorage.googleapis.com/v0/b/daily-fart.appspot.com/o/Silly_Farts-Joe.mp3?alt=media&token=3c4054e1-e4c2-455f-8e1e-cabd6dba3027',
-        isLocal: false);
+    final result = await _audioPlayer.play(_cachedFile.path);
     if (result == 1)
       setState(() {
         _playerState = PlayerState.playing;
