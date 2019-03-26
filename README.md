@@ -1,6 +1,6 @@
 # daily_fart
 
-A new Flutter project.
+A Flutter project created for fun, but useful for showing basic app concepts
 
 ## Getting Started
 

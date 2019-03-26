@@ -10,7 +10,7 @@ const String ad_unit_id = 'ca-app-pub-4892089932850014/7444446144';
 const String app_id = 'ca-app-pub-4892089932850014~3425310088';
 
 const String storagePath =
-    'https://firebasestorage.googleapis.com/v0/b/daily-fart.appspot.com/o/fart{0}.mp3';
+    'https://firebasestorage.googleapis.com/v0/b/daily-fart.appspot.com/o/fart{0}.mp3?alt=media';
 
 enum PlayerState { stopped, playing, paused }
 
@@ -21,8 +21,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'The Daily Fart',
-      theme:
-          ThemeData(primarySwatch: Colors.brown, backgroundColor: Colors.white),
+      theme: ThemeData(primarySwatch: Colors.brown),
       home: MyHomePage(title: 'The Daily Fart'),
     );
   }
@@ -32,7 +31,7 @@ class MyHomePage extends StatefulWidget {
   MyHomePage({Key key, this.title}) : super(key: key);
 
   final String title;
-
+  final TimeOfDay now = TimeOfDay.now();
   final String notPlaying = "assets/headshark.jpg";
   final String playing = "assets/headshark.gif";
 
@@ -45,15 +44,18 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  BannerAd _bannerAd; // ad
+  // ad
+  BannerAd _bannerAd;
   bool _adShown;
 
-  AudioPlayer _audioPlayer; // audio player
+  // audio player
+  AudioPlayer _audioPlayer;
   PlayerState _playerState = PlayerState.stopped;
   StreamSubscription _playerCompleteSubscription;
   get _isPlaying => _playerState == PlayerState.playing;
 
-  String currentImage = "assets/headshark.jpg"; // files
+  // files
+  String currentImage;
   File _cachedFile;
 
   Future<Null> downloadSound() async {
@@ -95,6 +97,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
+    currentImage = widget.notPlaying;
     downloadSound();
 
     FirebaseAdMob.instance.initialize(appId: app_id);

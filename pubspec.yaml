@@ -25,7 +25,7 @@ dependencies:
   cupertino_icons: ^0.1.2
   audioplayers: ^0.10.1
   firebase_admob: ^0.6.1
-  firebase_storage:
+  firebase_storage: 
     
 dev_dependencies:
   flutter_launcher_icons:
