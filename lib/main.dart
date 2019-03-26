@@ -9,9 +9,6 @@ const String testing_device = 'emulator-5554';
 const String ad_unit_id = 'ca-app-pub-4892089932850014/7444446144';
 const String app_id = 'ca-app-pub-4892089932850014~3425310088';
 
-const String storagePath =
-    'https://firebasestorage.googleapis.com/v0/b/daily-fart.appspot.com/o/fart{0}.mp3?alt=media';
-
 enum PlayerState { stopped, playing, paused }
 
 void main() => runApp(MyApp());
@@ -21,7 +18,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'The Daily Fart',
-      theme: ThemeData(primarySwatch: Colors.brown),
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(primarySwatch: Colors.lightGreen),
       home: MyHomePage(title: 'The Daily Fart'),
     );
   }
@@ -35,9 +33,12 @@ class MyHomePage extends StatefulWidget {
   final String notPlaying = "assets/headshark.jpg";
   final String playing = "assets/headshark.gif";
 
+  final String storagePath =
+      'https://firebasestorage.googleapis.com/v0/b/daily-fart.appspot.com/o/fart{0}.mp3?alt=media';
+
   final MobileAdTargetingInfo targetingInfo = MobileAdTargetingInfo(
       testDevices: testing_device != null ? <String>[testing_device] : null,
-      keywords: <String>['daily', 'funny', 'fart']);
+      keywords: <String>['daily', 'funny', 'gas']);
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
@@ -61,7 +62,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<Null> downloadSound() async {
     final TimeOfDay now = TimeOfDay.now();
     final int hour = now.hour;
-    final String path = storagePath.replaceAll('{0}', hour.toString());
+    final String path = widget.storagePath.replaceAll('{0}', hour.toString());
 
     final RegExp regExp = RegExp('([^?/]*\.(mp3))');
     final String fileName = regExp.stringMatch(path);
