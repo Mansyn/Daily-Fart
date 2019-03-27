@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_admob/firebase_admob.dart';
@@ -19,7 +20,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'The Daily Fart',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(primarySwatch: Colors.lightGreen),
+      theme: ThemeData(primarySwatch: Colors.lime),
       home: MyHomePage(title: 'The Daily Fart'),
     );
   }
@@ -30,11 +31,10 @@ class MyHomePage extends StatefulWidget {
 
   final String title;
   final TimeOfDay now = TimeOfDay.now();
-  final String notPlaying = "assets/headshark.jpg";
-  final String playing = "assets/headshark.gif";
+  final String notPlaying = "assets/guy.png";
+  final String playing = "assets/guy.gif";
 
-  final String storagePath =
-      'https://firebasestorage.googleapis.com/v0/b/daily-fart.appspot.com/o/fart{0}.mp3?alt=media';
+  final String fartFileName = 'fart{0}.mp3';
 
   final MobileAdTargetingInfo targetingInfo = MobileAdTargetingInfo(
       testDevices: testing_device != null ? <String>[testing_device] : null,
@@ -62,21 +62,15 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<Null> downloadSound() async {
     final TimeOfDay now = TimeOfDay.now();
     final int hour = now.hour;
-    final String path = widget.storagePath.replaceAll('{0}', hour.toString());
+    final String fart = widget.fartFileName.replaceAll('{0}', hour.toString());
 
-    final RegExp regExp = RegExp('([^?/]*\.(mp3))');
-    final String fileName = regExp.stringMatch(path);
-    final Directory tempDir = Directory.systemTemp;
-    final File file = File('${tempDir.path}/$fileName');
+    final Directory tempDir = await getTemporaryDirectory();
+    final File tempFile = await new File('${tempDir.path}/$fart').create();
 
-    final StorageReference ref = FirebaseStorage.instance.ref().child(fileName);
-    final StorageFileDownloadTask downloadTask = ref.writeToFile(file);
+    final StorageReference ref = FirebaseStorage.instance.ref().child(fart);
+    ref.writeToFile(tempFile);
 
-    final int byteNumber = (await downloadTask.future).totalByteCount;
-
-    print(byteNumber);
-
-    setState(() => _cachedFile = file);
+    setState(() => _cachedFile = tempFile);
   }
 
   BannerAd createBannerAd() {
@@ -133,13 +127,13 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             new SizedBox(
-                height: 225.0,
-                width: 400.0,
+                height: 600.0,
+                width: 600.0,
                 child: new IconButton(
                   icon: new Image(
                       image: new AssetImage(currentImage),
-                      height: 225.0,
-                      width: 400.0),
+                      height: 600.0,
+                      width: 600.0),
                   onPressed: _isPlaying ? null : () => _play(),
                 ))
           ],
@@ -159,7 +153,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<int> _play() async {
-    final result = await _audioPlayer.play(_cachedFile.path);
+    final result = await _audioPlayer.play(_cachedFile.path, isLocal: true);
     if (result == 1)
       setState(() {
         _playerState = PlayerState.playing;
