@@ -1,17 +1,26 @@
 import 'dart:async';
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:firebase_admob/firebase_admob.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:daily_fart/theme/build_theme.dart';
 
+// internal
+import 'package:daily_fart/theme/build_theme.dart';
+import 'package:daily_fart/widgets/prank_timer.dart' show PrankTimer;
+
+// ad config
 const String testing_device = 'emulator-5554';
 const String ad_unit_id = 'ca-app-pub-4892089932850014/7444446144';
 const String app_id = 'ca-app-pub-4892089932850014~342531008';
+const List<String> keywords = ['daily', 'funny', 'gas'];
 
+// app config
+const String title = 'The Daily Fart';
+const String notPlaying = "assets/guy.png";
+const String playing = "assets/guy.gif";
+const String fartFileName = 'fart{0}.mp3';
 enum PlayerState { stopped, playing, paused }
 
 class FartApp extends StatelessWidget {
@@ -29,16 +38,11 @@ class FartApp extends StatelessWidget {
 final ThemeData _kFartTheme = FartThemeBuilder.build();
 
 class FartHomePage extends StatefulWidget {
-  final String title = 'The Daily Fart';
   final TimeOfDay now = TimeOfDay.now();
-  final String notPlaying = "assets/guy.png";
-  final String playing = "assets/guy.gif";
-
-  final String fartFileName = 'fart{0}.mp3';
 
   final MobileAdTargetingInfo targetingInfo = MobileAdTargetingInfo(
       testDevices: testing_device != null ? <String>[testing_device] : null,
-      keywords: <String>['daily', 'funny', 'gas']);
+      keywords: keywords);
 
   @override
   _FartAppState createState() => _FartAppState();
@@ -56,13 +60,13 @@ class _FartAppState extends State<FartHomePage> {
 
   // files
   get _currentImage =>
-      _playerState == PlayerState.playing ? widget.playing : widget.notPlaying;
+      _playerState == PlayerState.playing ? playing : notPlaying;
   File _cachedFile;
 
   Future<Null> downloadSound() async {
     final TimeOfDay now = TimeOfDay.now();
     final int hour = now.hour;
-    final String fart = widget.fartFileName.replaceAll('{0}', hour.toString());
+    final String fart = fartFileName.replaceAll('{0}', hour.toString());
 
     final Directory tempDir = await getTemporaryDirectory();
     final File tempFile = await new File('${tempDir.path}/$fart').create();
@@ -110,31 +114,35 @@ class _FartAppState extends State<FartHomePage> {
       height: 50.0,
     ));
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: Text(widget.title),
-        actions: <Widget>[
-          new IconButton(
-            icon: new Icon(Icons.close),
-            onPressed: () => exit(0),
+    return DefaultTabController(
+      length: 3,
+      child: Scaffold(
+        appBar: AppBar(
+          bottom: TabBar(
+            tabs: [
+              Tab(icon: Icon(Icons.wb_cloudy)),
+              Tab(icon: Icon(Icons.alarm))
+            ],
           ),
-        ],
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            new SizedBox(
-                height: 600.0,
-                width: 600.0,
-                child: new IconButton(
-                    icon: new Image(image: new AssetImage(_currentImage)),
-                    onPressed: () => _play()))
+          title: Text(title),
+          actions: <Widget>[
+            new IconButton(
+              icon: new Icon(Icons.close),
+              onPressed: () => exit(0),
+            ),
           ],
         ),
+        body: TabBarView(
+          children: [
+            new SizedBox(
+                child: new IconButton(
+                    icon: new Image(image: new AssetImage(_currentImage)),
+                    onPressed: () => _play())),
+            PrankTimer(audioPlayer: _audioPlayer, cachedFile: _cachedFile),
+          ],
+        ),
+        persistentFooterButtons: _adShown ? fakeBottomButtons : null,
       ),
-      persistentFooterButtons: _adShown ? fakeBottomButtons : null,
     );
   }
 
