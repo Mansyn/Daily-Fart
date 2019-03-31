@@ -1,8 +1,9 @@
-import 'dart:async';
 import 'dart:io';
+import 'package:daily_fart/theme/colors.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:countdown/countdown.dart';
 
 class PrankTimer extends StatefulWidget {
   PrankTimer({Key key, this.audioPlayer, this.cachedFile}) : super(key: key);
@@ -15,28 +16,37 @@ class PrankTimer extends StatefulWidget {
 }
 
 class PrankTimerState extends State<PrankTimer> {
-  Timer _timer;
   Duration _duration;
-  int _counter;
+  CountDown _cd;
+  int _timer = 5;
+  int _timerReset = 5;
 
   @override
   void initState() {
-    _duration = const Duration(seconds: 10);
-    _counter = 10;
     super.initState();
+    _duration = new Duration(seconds: _timer);
   }
 
-  void startTimer() {
-    _timer = new Timer.periodic(
-        _duration,
-        (Timer timer) => setState(() {
-              if (_counter < 1) {
-                timer.cancel();
-                play();
-              } else {
-                _counter = _counter - 1;
-              }
-            }));
+  void countdown() {
+    _cd = new CountDown(_duration);
+    var sub = _cd.stream.listen(null);
+
+    sub.onData((Duration d) {
+      if (_timer == d.inSeconds) return;
+      print("countdown: ${d.inSeconds}");
+      setState(() {
+        _timer = d.inSeconds;
+      });
+    });
+
+    sub.onDone(() {
+      play();
+      reset();
+    });
+  }
+
+  reset() {
+    _timer = _timerReset;
   }
 
   play() async {
@@ -49,9 +59,28 @@ class PrankTimerState extends State<PrankTimer> {
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: <Widget>[
+        Text("$_timer",
+            style:
+                DefaultTextStyle.of(context).style.apply(fontSizeFactor: 5.0)),
+        SizedBox(height: 40),
+        Ink(
+          decoration: ShapeDecoration(
+            color: kFartGreen400,
+            shape: CircleBorder(),
+          ),
+          child: IconButton(
+            icon: Icon(Icons.play_arrow),
+            color: Colors.white,
+            tooltip: 'Start Timer',
+            onPressed: () {
+              countdown();
+            },
+          ),
+        ),
+        SizedBox(height: 20),
         MaterialButton(
           child: Text(
-            "Cupertino date Picker",
+            "Set Timer",
             style: TextStyle(color: Colors.white),
           ),
           color: Theme.of(context).accentColor,
@@ -69,27 +98,20 @@ class PrankTimerState extends State<PrankTimer> {
                         onTimerDurationChanged: (Duration changedtimer) {
                           setState(() {
                             _duration = changedtimer;
-                            _counter = changedtimer.inSeconds;
+                            _timer = changedtimer.inSeconds;
+                            _timerReset = changedtimer.inSeconds;
                           });
                         },
                       ));
                 });
           },
         ),
-        RaisedButton(
-          onPressed: () {
-            startTimer();
-          },
-          child: Text("Begin Countdown"),
-        ),
-        Text("$_counter")
       ],
     );
   }
 
   @override
   void dispose() {
-    _timer.cancel();
     super.dispose();
   }
 }
