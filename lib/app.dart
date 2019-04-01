@@ -11,7 +11,7 @@ import 'package:daily_fart/theme/build_theme.dart';
 import 'package:daily_fart/widgets/prank_timer.dart' show PrankTimer;
 
 // ad config
-const String testing_device = 'emulator-5554';
+const String testing_device = 'emulator';
 const String ad_unit_id = 'ca-app-pub-4892089932850014/7444446144';
 const String app_id = 'ca-app-pub-4892089932850014~342531008';
 const List<String> keywords = ['daily', 'funny', 'gas'];
