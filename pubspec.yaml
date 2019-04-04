@@ -11,7 +11,7 @@ description: A daily fart downloader
 # In iOS, build-name is used as CFBundleShortVersionString while build-number used as CFBundleVersion.
 # Read more about iOS versioning at
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
-version: 1.0.3+3
+version: 1.0.4+4
 
 environment:
   sdk: ">=2.1.0 <3.0.0"
@@ -28,6 +28,7 @@ dependencies:
   firebase_storage: 
   path_provider:
   countdown: 
+  screen:
 
 dev_dependencies:
   flutter_launcher_icons:

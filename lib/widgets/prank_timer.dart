@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:countdown/countdown.dart';
+import 'package:screen/screen.dart';
 
 class PrankTimer extends StatefulWidget {
   PrankTimer({Key key, this.audioPlayer, this.cachedFile}) : super(key: key);
@@ -28,6 +29,7 @@ class PrankTimerState extends State<PrankTimer> {
   }
 
   void countdown() {
+    Screen.keepOn(true);
     _cd = new CountDown(_duration);
     var sub = _cd.stream.listen(null);
 
@@ -47,6 +49,7 @@ class PrankTimerState extends State<PrankTimer> {
 
   reset() {
     _timer = _timerReset;
+    Screen.keepOn(false);
   }
 
   play() async {
@@ -61,7 +64,7 @@ class PrankTimerState extends State<PrankTimer> {
       children: <Widget>[
         Text("$_timer",
             style:
-                DefaultTextStyle.of(context).style.apply(fontSizeFactor: 5.0)),
+                DefaultTextStyle.of(context).style.apply(fontSizeFactor: 10.0)),
         SizedBox(height: 40),
         Ink(
           decoration: ShapeDecoration(
