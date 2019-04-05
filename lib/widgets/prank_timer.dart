@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:daily_fart/theme/colors.dart';
 import 'package:flutter/cupertino.dart';
@@ -5,18 +6,23 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:countdown/countdown.dart';
 import 'package:screen/screen.dart';
+import 'package:vibration/vibration.dart';
 
 class PrankTimer extends StatefulWidget {
-  PrankTimer({Key key, this.audioPlayer, this.cachedFile}) : super(key: key);
+  PrankTimer({Key key, this.cachedFile, this.canVibrate}) : super(key: key);
 
-  final AudioPlayer audioPlayer;
   final File cachedFile;
+  final bool canVibrate;
 
   @override
   State createState() => new PrankTimerState();
 }
 
 class PrankTimerState extends State<PrankTimer> {
+  // audio player
+  AudioPlayer _audioPlayer;
+  StreamSubscription _playerCompleteSubscription;
+
   Duration _duration;
   CountDown _cd;
   int _timer = 5;
@@ -25,10 +31,12 @@ class PrankTimerState extends State<PrankTimer> {
   @override
   void initState() {
     super.initState();
+
     _duration = new Duration(seconds: _timer);
+    _initAudioPlayer();
   }
 
-  void countdown() {
+  _countdown() {
     Screen.keepOn(true);
     _cd = new CountDown(_duration);
     var sub = _cd.stream.listen(null);
@@ -42,18 +50,41 @@ class PrankTimerState extends State<PrankTimer> {
     });
 
     sub.onDone(() {
-      play();
-      reset();
+      _play();
     });
   }
 
-  reset() {
-    _timer = _timerReset;
-    Screen.keepOn(false);
+  void _initAudioPlayer() {
+    _audioPlayer = new AudioPlayer(mode: PlayerMode.MEDIA_PLAYER);
+
+    _playerCompleteSubscription =
+        _audioPlayer.onPlayerCompletion.listen((event) {
+      _onComplete();
+    });
   }
 
-  play() async {
-    await widget.audioPlayer.play(widget.cachedFile.path, isLocal: true);
+  Future<int> _play() async {
+    final result =
+        await _audioPlayer.play(widget.cachedFile.path, isLocal: true);
+    if (result == 1) {
+      if (widget.canVibrate) {
+        Vibration.vibrate(duration: 20000);
+      }
+    }
+    return result;
+  }
+
+  Future<Null> _stop() async {
+    await _audioPlayer.stop();
+    _onComplete();
+  }
+
+  void _onComplete() {
+    Vibration.cancel();
+    Screen.keepOn(false);
+    setState(() {
+      _timer = _timerReset;
+    });
   }
 
   @override
@@ -62,26 +93,49 @@ class PrankTimerState extends State<PrankTimer> {
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: <Widget>[
-        Text("$_timer",
-            style:
-                DefaultTextStyle.of(context).style.apply(fontSizeFactor: 10.0)),
-        SizedBox(height: 40),
-        Ink(
-          decoration: ShapeDecoration(
-            color: kFartGreen400,
-            shape: CircleBorder(),
+        new Row(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
+          new Text("$_timer",
+              style: DefaultTextStyle.of(context)
+                  .style
+                  .apply(fontSizeFactor: 10.0)),
+          new Text(" sec",
+              style:
+                  DefaultTextStyle.of(context).style.apply(fontSizeFactor: 2.0))
+        ]),
+        new SizedBox(height: 40),
+        new Row(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
+          new Ink(
+            decoration: ShapeDecoration(
+              color: kFartGreen300,
+              shape: CircleBorder(),
+            ),
+            child: IconButton(
+              icon: Icon(Icons.play_arrow),
+              color: Colors.white,
+              tooltip: 'Start Timer',
+              onPressed: () {
+                _countdown();
+              },
+            ),
           ),
-          child: IconButton(
-            icon: Icon(Icons.play_arrow),
-            color: Colors.white,
-            tooltip: 'Start Timer',
-            onPressed: () {
-              countdown();
-            },
+          new SizedBox(width: 10),
+          new Ink(
+            decoration: ShapeDecoration(
+              color: kFartErrorRed,
+              shape: CircleBorder(),
+            ),
+            child: IconButton(
+              icon: Icon(Icons.stop),
+              color: Colors.white,
+              tooltip: 'Stop Timer',
+              onPressed: () {
+                _stop();
+              },
+            ),
           ),
-        ),
-        SizedBox(height: 20),
-        MaterialButton(
+        ]),
+        new SizedBox(height: 40),
+        new MaterialButton(
           child: Text(
             "Set Timer",
             style: TextStyle(color: Colors.white),
@@ -115,6 +169,8 @@ class PrankTimerState extends State<PrankTimer> {
 
   @override
   void dispose() {
+    Vibration.cancel();
+    _playerCompleteSubscription?.cancel();
     super.dispose();
   }
 }

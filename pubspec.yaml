@@ -28,6 +28,7 @@ dependencies:
   firebase_storage: 
   path_provider:
   countdown: 
+  vibration:
   screen:
 
 dev_dependencies:

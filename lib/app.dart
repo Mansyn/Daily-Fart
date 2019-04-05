@@ -1,27 +1,25 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:daily_fart/widgets/fart.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:audioplayers/audioplayers.dart';
 import 'package:firebase_admob/firebase_admob.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:vibration/vibration.dart';
 
 // internal
 import 'package:daily_fart/theme/build_theme.dart';
 import 'package:daily_fart/widgets/prank_timer.dart' show PrankTimer;
 
 // ad config
-const String testing_device = 'emulator';
+const String testing_device = '710KPYR0456922';
 const String ad_unit_id = 'ca-app-pub-4892089932850014/7444446144';
 const String app_id = 'ca-app-pub-4892089932850014~342531008';
 const List<String> keywords = ['daily', 'funny', 'gas'];
 
 // app config
 const String title = 'The Daily Fart';
-const String notPlaying = "assets/guy.png";
-const String playing = "assets/guy.gif";
 const String fartFileName = 'fart{0}.mp3';
-enum PlayerState { stopped, playing, paused }
 
 class FartApp extends StatelessWidget {
   @override
@@ -53,17 +51,13 @@ class _FartAppState extends State<FartHomePage> {
   BannerAd _bannerAd;
   bool _adShown;
 
-  // audio player
-  AudioPlayer _audioPlayer;
-  PlayerState _playerState = PlayerState.stopped;
-  StreamSubscription _playerCompleteSubscription;
+  // vibrate
+  bool canVibrate;
 
   // files
-  get _currentImage =>
-      _playerState == PlayerState.playing ? playing : notPlaying;
   File _cachedFile;
 
-  Future<Null> downloadSound() async {
+  Future<Null> _downloadSound() async {
     final TimeOfDay now = TimeOfDay.now();
     final int hour = now.hour;
     final String fart = fartFileName.replaceAll('{0}', hour.toString());
@@ -77,7 +71,7 @@ class _FartAppState extends State<FartHomePage> {
     setState(() => _cachedFile = tempFile);
   }
 
-  BannerAd createBannerAd() {
+  BannerAd _createBannerAd() {
     return new BannerAd(
         adUnitId: ad_unit_id,
         targetingInfo: widget.targetingInfo,
@@ -93,18 +87,22 @@ class _FartAppState extends State<FartHomePage> {
         });
   }
 
+  Future<Null> _checkVibrate() async {
+    canVibrate = await Vibration.hasVibrator();
+  }
+
   @override
   void initState() {
     super.initState();
-    downloadSound();
+    _downloadSound();
 
     FirebaseAdMob.instance.initialize(appId: app_id);
     _adShown = false;
-    _bannerAd = createBannerAd()
+    _bannerAd = _createBannerAd()
       ..load()
       ..show();
 
-    _initAudioPlayer();
+    _checkVibrate();
   }
 
   @override
@@ -134,11 +132,8 @@ class _FartAppState extends State<FartHomePage> {
         ),
         body: TabBarView(
           children: [
-            new SizedBox(
-                child: new IconButton(
-                    icon: new Image(image: new AssetImage(_currentImage)),
-                    onPressed: () => _play())),
-            PrankTimer(audioPlayer: _audioPlayer, cachedFile: _cachedFile),
+            Fart(cachedFile: _cachedFile, canVibrate: canVibrate),
+            PrankTimer(cachedFile: _cachedFile, canVibrate: canVibrate),
           ],
         ),
         persistentFooterButtons: _adShown ? fakeBottomButtons : null,
@@ -146,34 +141,10 @@ class _FartAppState extends State<FartHomePage> {
     );
   }
 
-  void _initAudioPlayer() {
-    _audioPlayer = new AudioPlayer(mode: PlayerMode.MEDIA_PLAYER);
-
-    _playerCompleteSubscription =
-        _audioPlayer.onPlayerCompletion.listen((event) {
-      _onComplete();
-    });
-  }
-
-  Future<int> _play() async {
-    final result = await _audioPlayer.play(_cachedFile.path, isLocal: true);
-    if (result == 1)
-      setState(() {
-        _playerState = PlayerState.playing;
-      });
-    return result;
-  }
-
-  void _onComplete() {
-    setState(() {
-      _playerState = PlayerState.stopped;
-    });
-  }
-
   @override
   void dispose() {
+    Vibration.cancel();
     _bannerAd?.dispose();
-    _playerCompleteSubscription?.cancel();
     super.dispose();
   }
 }
