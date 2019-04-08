@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:daily_fart/app.dart';
 import 'package:daily_fart/theme/colors.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:audioplayers/audioplayers.dart';
@@ -22,9 +23,13 @@ class PrankTimerState extends State<PrankTimer> {
   // audio player
   AudioPlayer _audioPlayer;
   StreamSubscription _playerCompleteSubscription;
+  PlayerState _playerState = PlayerState.stopped;
+
+  get _isStartEnabled => _playerState == PlayerState.playing ? false : true;
 
   Duration _duration;
   CountDown _cd;
+  StreamSubscription<Duration> _sub;
   int _timer = 5;
   int _timerReset = 5;
 
@@ -39,9 +44,9 @@ class PrankTimerState extends State<PrankTimer> {
   _countdown() {
     Screen.keepOn(true);
     _cd = new CountDown(_duration);
-    var sub = _cd.stream.listen(null);
+    _sub = _cd.stream.listen(null);
 
-    sub.onData((Duration d) {
+    _sub.onData((Duration d) {
       if (_timer == d.inSeconds) return;
       print("countdown: ${d.inSeconds}");
       setState(() {
@@ -49,8 +54,12 @@ class PrankTimerState extends State<PrankTimer> {
       });
     });
 
-    sub.onDone(() {
+    _sub.onDone(() {
       _play();
+    });
+
+    setState(() {
+      _playerState = PlayerState.playing;
     });
   }
 
@@ -76,6 +85,7 @@ class PrankTimerState extends State<PrankTimer> {
 
   Future<Null> _stop() async {
     await _audioPlayer.stop();
+    _sub.cancel();
     _onComplete();
   }
 
@@ -84,6 +94,7 @@ class PrankTimerState extends State<PrankTimer> {
     Screen.keepOn(false);
     setState(() {
       _timer = _timerReset;
+      _playerState = PlayerState.stopped;
     });
   }
 
@@ -106,16 +117,14 @@ class PrankTimerState extends State<PrankTimer> {
         new Row(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
           new Ink(
             decoration: ShapeDecoration(
-              color: kFartGreen300,
+              color: _isStartEnabled ? kFartGreen300 : kFartDisabledBg,
               shape: CircleBorder(),
             ),
             child: IconButton(
               icon: Icon(Icons.play_arrow),
               color: Colors.white,
               tooltip: 'Start Timer',
-              onPressed: () {
-                _countdown();
-              },
+              onPressed: () => _isStartEnabled ? _countdown() : null,
             ),
           ),
           new SizedBox(width: 10),

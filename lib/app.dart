@@ -20,6 +20,7 @@ const List<String> keywords = ['daily', 'funny', 'gas'];
 // app config
 const String title = 'The Daily Fart';
 const String fartFileName = 'fart{0}.mp3';
+enum PlayerState { stopped, playing, paused }
 
 class FartApp extends StatelessWidget {
   @override

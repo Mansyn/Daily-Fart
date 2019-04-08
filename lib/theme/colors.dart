@@ -7,7 +7,8 @@ const kFartGreen300 = const Color(0xFF3E6837);
 const kFartGreen400 = const Color(0xFF175742);
 
 const kFartGray900 = const Color(0xFF333333);
-
+const kFartDisabledBg = const Color(0xFFDBDBDB);
+const kFartDisabledText = const Color(0xFFB3B3B3);
 const kFartErrorRed = const Color(0xFFC5032B);
 
 const kFartSurfaceWhite = const Color(0xFFFFFBFA);

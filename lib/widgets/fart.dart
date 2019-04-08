@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:daily_fart/app.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
@@ -7,7 +8,6 @@ import 'package:vibration/vibration.dart';
 
 const String notPlaying = "assets/guy.png";
 const String playing = "assets/guy.gif";
-enum PlayerState { stopped, playing, paused }
 
 class Fart extends StatefulWidget {
   Fart({Key key, this.cachedFile, this.canVibrate}) : super(key: key);
