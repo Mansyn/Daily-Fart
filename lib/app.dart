@@ -53,9 +53,10 @@ class _FartAppState extends State<FartHomePage> {
   bool _adShown;
 
   // vibrate
-  bool canVibrate;
+  bool _canVibrate;
 
   // files
+  StorageReference _ref;
   File _cachedFile;
 
   Future<Null> _downloadSound() async {
@@ -66,10 +67,12 @@ class _FartAppState extends State<FartHomePage> {
     final Directory tempDir = await getTemporaryDirectory();
     final File tempFile = await new File('${tempDir.path}/$fart').create();
 
-    final StorageReference ref = FirebaseStorage.instance.ref().child(fart);
-    ref.writeToFile(tempFile);
+    _ref = FirebaseStorage.instance.ref().child(fart);
+    _ref.writeToFile(tempFile);
 
-    setState(() => _cachedFile = tempFile);
+    setState(() {
+      _cachedFile = tempFile;
+    });
   }
 
   BannerAd _createBannerAd() {
@@ -89,7 +92,7 @@ class _FartAppState extends State<FartHomePage> {
   }
 
   Future<Null> _checkVibrate() async {
-    canVibrate = await Vibration.hasVibrator();
+    _canVibrate = await Vibration.hasVibrator();
   }
 
   @override
@@ -133,8 +136,8 @@ class _FartAppState extends State<FartHomePage> {
         ),
         body: TabBarView(
           children: [
-            Fart(cachedFile: _cachedFile, canVibrate: canVibrate),
-            PrankTimer(cachedFile: _cachedFile, canVibrate: canVibrate),
+            Fart(cachedFile: _cachedFile, ref: _ref, canVibrate: _canVibrate),
+            PrankTimer(cachedFile: _cachedFile, canVibrate: _canVibrate),
           ],
         ),
         persistentFooterButtons: _adShown ? fakeBottomButtons : null,

@@ -85,7 +85,7 @@ class PrankTimerState extends State<PrankTimer> {
 
   Future<Null> _stop() async {
     await _audioPlayer.stop();
-    _sub.cancel();
+    _sub?.cancel();
     _onComplete();
   }
 
@@ -155,6 +155,7 @@ class PrankTimerState extends State<PrankTimer> {
                 context: context,
                 builder: (BuildContext builder) {
                   return Container(
+                      margin: const EdgeInsets.only(bottom: 50.0),
                       height: MediaQuery.of(context).copyWith().size.height / 3,
                       child: CupertinoTimerPicker(
                         mode: CupertinoTimerPickerMode.ms,
